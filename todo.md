@@ -1,0 +1,69 @@
+# ONIBlog - Project TODO
+
+## Phase 1: Database & Backend Setup
+- [x] Create database schema (users, posts, categories, comments, analytics, email_subscriptions)
+- [x] Set up tRPC procedures for posts, categories, comments, analytics
+- [x] Implement authentication endpoints (login, signup, logout)
+- [x] Create admin-only procedures with role-based access control
+- [ ] Set up email notification system through Manus
+- [ ] Create IMDb integration service (5 posts per day automation)
+
+## Phase 2: Public Frontend - Homepage & Blog
+- [x] Design and build homepage with hero section (retro-futuristic aesthetic)
+- [x] Implement smooth scroll animations and card hover effects
+- [x] Build blog post listing page with category filters
+- [x] Add search functionality for blog posts
+- [x] Create individual blog post detail page with rich content display
+- [x] Add related posts section on detail page
+- [x] Build public comments section (anyone can comment)
+- [x] Implement affiliate link tracking in analytics
+
+## Phase 3: Authentication & User Features
+- [x] Build login screen with animated transitions
+- [x] Build signup screen with animated transitions
+- [x] Create user profile page with account details
+- [x] Add reading history tracking on user profile
+- [ ] Implement email subscription for new post notifications
+
+## Phase 4: Admin Dashboard & Content Management
+- [x] Build admin dashboard with sidebar navigation
+- [x] Create admin-only access control (owner only)
+- [x] Build post management interface (create, edit, delete)
+- [x] Implement rich text editor for posts
+- [ ] Add image upload functionality for posts
+- [x] Add category selection in post editor
+- [x] Implement publish/draft status toggle
+- [x] Build category management interface (create, edit, delete)
+- [x] Create analytics tracking page with daily visitor graph
+- [x] Add click tracking visualization for posts and affiliate links
+
+## Phase 5: Advanced Features
+- [ ] Implement LLM-powered writing assistant in admin editor
+- [ ] Add auto-generate featured images from external APIs (OMDB/IMDb)
+- [ ] Create automated IMDb integration (5 posts per day)
+- [x] Build daily analytics dashboard with visitor trends
+- [ ] Implement email notification triggers for new posts
+
+## Phase 6: UI/UX Polish & Animations
+- [x] Apply retro-futuristic dystopian aesthetic throughout
+- [x] Add chromatic aberration effects to typography
+- [x] Implement scanline texture on backgrounds
+- [x] Add monospace error codes and geometric brackets as design elements
+- [x] Create animated loading states and skeleton screens
+- [x] Add micro-interactions throughout the UI
+- [x] Implement responsive design (mobile-first)
+- [x] Add smooth page transitions
+
+## Phase 7: Testing & Deployment
+- [x] Write vitest tests for critical procedures
+- [x] Test authentication flow
+- [x] Test admin-only access restrictions
+- [x] Fix owner-only access enforcement (strict openId matching)
+- [x] Fix comment moderation workflow (auto-approve public comments)
+- [x] Fix analytics aggregation (real data instead of mock)
+- [x] Fix BlogPost.tsx JSON parsing and hook usage
+- [x] Fix related posts links navigation
+- [ ] Test email notification system
+- [ ] Test analytics tracking
+- [ ] Final QA and bug fixes
+- [ ] Create checkpoint and prepare for deployment

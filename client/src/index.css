@@ -175,3 +175,252 @@
     }
   }
 }
+/* ===== RETRO-FUTURISTIC DYSTOPIAN THEME ===== */
+
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Mono:wght@400;700&display=swap');
+
+/* Glitch effect */
+.glitch {
+  position: relative;
+}
+
+.glitch::before,
+.glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.glitch::before {
+  animation: glitch-1 0.3s infinite;
+  color: #00ffff;
+  z-index: -1;
+}
+
+.glitch::after {
+  animation: glitch-2 0.3s infinite;
+  color: #ff00ff;
+  z-index: -2;
+}
+
+@keyframes glitch-1 {
+  0% {
+    clip-path: inset(0 0 0 0);
+    transform: translate(0);
+  }
+  20% {
+    clip-path: inset(10% 0 60% 0);
+    transform: translate(-2px, 2px);
+  }
+  40% {
+    clip-path: inset(30% 0 10% 0);
+    transform: translate(-2px, -2px);
+  }
+  60% {
+    clip-path: inset(50% 0 30% 0);
+    transform: translate(2px, 2px);
+  }
+  80% {
+    clip-path: inset(20% 0 40% 0);
+    transform: translate(2px, -2px);
+  }
+  100% {
+    clip-path: inset(0 0 0 0);
+    transform: translate(0);
+  }
+}
+
+@keyframes glitch-2 {
+  0% {
+    clip-path: inset(0 0 0 0);
+    transform: translate(0);
+  }
+  20% {
+    clip-path: inset(60% 0 10% 0);
+    transform: translate(2px, -2px);
+  }
+  40% {
+    clip-path: inset(10% 0 30% 0);
+    transform: translate(2px, 2px);
+  }
+  60% {
+    clip-path: inset(30% 0 50% 0);
+    transform: translate(-2px, -2px);
+  }
+  80% {
+    clip-path: inset(40% 0 20% 0);
+    transform: translate(-2px, 2px);
+  }
+  100% {
+    clip-path: inset(0 0 0 0);
+    transform: translate(0);
+  }
+}
+
+/* Neon glow effects */
+.neon-glow {
+  box-shadow: 
+    0 0 10px rgba(0, 255, 255, 0.5),
+    0 0 20px rgba(255, 0, 255, 0.3),
+    inset 0 0 10px rgba(0, 255, 255, 0.1);
+}
+
+.neon-glow-cyan {
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.6);
+}
+
+.neon-glow-magenta {
+  box-shadow: 0 0 20px rgba(255, 0, 255, 0.6);
+}
+
+/* Loading animation */
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.5;
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+  }
+  50% {
+    opacity: 1;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.8);
+  }
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Skeleton loading */
+@keyframes skeleton-loading {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 255, 255, 0.1) 0%,
+    rgba(0, 255, 255, 0.2) 50%,
+    rgba(0, 255, 255, 0.1) 100%
+  );
+  background-size: 1000px 100%;
+  animation: skeleton-loading 2s infinite;
+}
+
+/* Page transition */
+@keyframes page-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-transition {
+  animation: page-fade-in 0.5s ease-out;
+}
+
+/* Utility classes */
+.font-orbitron {
+  font-family: 'Orbitron', sans-serif;
+}
+
+.font-space-mono {
+  font-family: 'Space Mono', monospace;
+}
+
+.text-neon-cyan {
+  color: #00ffff;
+}
+
+.text-neon-magenta {
+  color: #ff00ff;
+}
+
+.text-neon-green {
+  color: #00ff00;
+}
+
+.text-neon-purple {
+  color: #aa00ff;
+}
+
+.bg-neon-cyan {
+  background-color: #00ffff;
+}
+
+.bg-neon-magenta {
+  background-color: #ff00ff;
+}
+
+.border-neon-cyan {
+  border-color: #00ffff;
+}
+
+.border-neon-magenta {
+  border-color: #ff00ff;
+}
+
+.shadow-neon-cyan {
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+}
+
+.shadow-neon-magenta {
+  box-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
+}
+
+.hover\:shadow-neon-cyan:hover {
+  box-shadow: 0 0 30px rgba(0, 255, 255, 0.8);
+}
+
+.hover\:shadow-neon-magenta:hover {
+  box-shadow: 0 0 30px rgba(255, 0, 255, 0.8);
+}
+
+.transition-glow {
+  @apply transition-all duration-300;
+}
+
+/* Heading styles */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+h1 {
+  text-shadow: 
+    -2px 0 #00ffff,
+    2px 0 #ff00ff,
+    0 0 20px rgba(0, 255, 255, 0.5);
+}
+
+h2 {
+  text-shadow: 
+    -1px 0 #00ffff,
+    1px 0 #ff00ff;
+}
+
+p {
+  font-family: 'Space Mono', monospace;
+}
+
+body {
+  background-image: 
+    repeating-linear-gradient(
+      0deg,
+      rgba(0, 255, 255, 0.03) 0px,
+      rgba(0, 255, 255, 0.03) 1px,
+      transparent 1px,
+      transparent 2px
+    );
+}
