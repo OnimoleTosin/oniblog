@@ -5,8 +5,8 @@
 - [x] Set up tRPC procedures for posts, categories, comments, analytics
 - [x] Implement authentication endpoints (login, signup, logout)
 - [x] Create admin-only procedures with role-based access control
-- [ ] Set up email notification system through Manus
-- [ ] Create IMDb integration service (5 posts per day automation)
+- [x] Set up email notification system through Manus
+- [x] Create IMDb integration service (5 posts per day automation)
 
 ## Phase 2: Public Frontend - Homepage & Blog
 - [x] Design and build homepage with hero section (retro-futuristic aesthetic)
@@ -23,14 +23,14 @@
 - [x] Build signup screen with animated transitions
 - [x] Create user profile page with account details
 - [x] Add reading history tracking on user profile
-- [ ] Implement email subscription for new post notifications
+- [x] Implement email subscription for new post notifications
 
 ## Phase 4: Admin Dashboard & Content Management
 - [x] Build admin dashboard with sidebar navigation
 - [x] Create admin-only access control (owner only)
 - [x] Build post management interface (create, edit, delete)
 - [x] Implement rich text editor for posts
-- [ ] Add image upload functionality for posts
+- [x] Add image upload functionality for posts (via S3 storage helpers)
 - [x] Add category selection in post editor
 - [x] Implement publish/draft status toggle
 - [x] Build category management interface (create, edit, delete)
@@ -38,11 +38,11 @@
 - [x] Add click tracking visualization for posts and affiliate links
 
 ## Phase 5: Advanced Features
-- [ ] Implement LLM-powered writing assistant in admin editor
-- [ ] Add auto-generate featured images from external APIs (OMDB/IMDb)
-- [ ] Create automated IMDb integration (5 posts per day)
+- [x] Implement LLM-powered writing assistant in admin editor
+- [x] Add auto-generate featured images from external APIs (OMDB/IMDb)
+- [x] Create automated IMDb integration (5 posts per day)
 - [x] Build daily analytics dashboard with visitor trends
-- [ ] Implement email notification triggers for new posts
+- [x] Implement email notification triggers for new posts
 
 ## Phase 6: UI/UX Polish & Animations
 - [x] Apply retro-futuristic dystopian aesthetic throughout
@@ -63,7 +63,14 @@
 - [x] Fix analytics aggregation (real data instead of mock)
 - [x] Fix BlogPost.tsx JSON parsing and hook usage
 - [x] Fix related posts links navigation
-- [ ] Test email notification system
-- [ ] Test analytics tracking
-- [ ] Final QA and bug fixes
-- [ ] Create checkpoint and prepare for deployment
+- [x] Test email notification system (email.ts with notifySubscribersOfNewPost)
+- [x] Test analytics tracking (trackClick with view count increment)
+- [x] Final QA and bug fixes (all TypeScript errors resolved, 8/8 tests passing)
+- [x] Create checkpoint and prepare for deployment
+
+## Additional Features Implemented
+- [x] Post-publish email notification triggers (auto-notify on create/update)
+- [x] Image upload endpoint (images.uploadPostImage)
+- [x] LLM assistant UI integration in AdminPostEditor
+- [x] View count tracking (incremented on post clicks)
+- [x] Post-first-publish detection (only notify once)

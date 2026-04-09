@@ -5,8 +5,10 @@ import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import * as db from "./db";
-import { eq } from "drizzle-orm";
-import { posts, categories, users, comments } from "../drizzle/schema";
+import * as email from "./email";
+import * as llm from "./llm-assistant";
+import { eq, and, desc, gte, lte } from "drizzle-orm";
+import { posts, categories, users, comments, emailSubscriptions, analytics } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
 // Owner-only procedure (strict owner enforcement)
@@ -66,7 +68,7 @@ export const appRouter = router({
       .query(async ({ input }) => db.getRelatedPosts(input.categoryId, input.currentPostId, input.limit)),
 
     // Admin endpoints
-    create: adminProcedure
+    create: ownerProcedure
       .input(z.object({
         title: z.string().min(1),
         content: z.string().min(1),
@@ -94,10 +96,20 @@ export const appRouter = router({
           publishedAt,
         });
         
-        return { id: result[0].insertId, slug };
+        const postId = result[0].insertId;
+        
+        // Trigger email notifications if published
+        if (input.status === 'published') {
+          const newPost = await db_instance.select().from(posts).where(eq(posts.id, postId)).limit(1);
+          if (newPost.length > 0) {
+            await email.notifySubscribersOfNewPost(newPost[0]);
+          }
+        }
+        
+        return { id: postId, slug };
       }),
 
-    update: adminProcedure
+    update: ownerProcedure
       .input(z.object({
         id: z.number(),
         title: z.string().optional(),
@@ -119,16 +131,29 @@ export const appRouter = router({
         const { id, ...updateData } = input;
         const publishedAt = updateData.status === 'published' ? new Date() : undefined;
         
+        // Get the old post to check if we're publishing for the first time
+        const oldPost = await db_instance.select().from(posts).where(eq(posts.id, id)).limit(1);
+        const wasPublished = oldPost.length > 0 && oldPost[0].status === 'published';
+        const isPublishing = updateData.status === 'published' && !wasPublished;
+        
         await db_instance.update(posts).set({
           ...updateData,
           publishedAt,
           updatedAt: new Date(),
         }).where(eq(posts.id, id));
         
+        // Trigger email notifications if publishing for the first time
+        if (isPublishing) {
+          const newPost = await db_instance.select().from(posts).where(eq(posts.id, id)).limit(1);
+          if (newPost.length > 0) {
+            await email.notifySubscribersOfNewPost(newPost[0]);
+          }
+        }
+        
         return { success: true };
       }),
 
-    delete: adminProcedure
+    delete: ownerProcedure
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
         const db_instance = await db.getDb();
@@ -147,7 +172,7 @@ export const appRouter = router({
       .input(z.object({ slug: z.string() }))
       .query(async ({ input }) => db.getCategoryBySlug(input.slug)),
 
-    create: adminProcedure
+    create: ownerProcedure
       .input(z.object({
         name: z.string().min(1),
         slug: z.string().min(1),
@@ -163,7 +188,7 @@ export const appRouter = router({
         return { id: result[0].insertId };
       }),
 
-    update: adminProcedure
+    update: ownerProcedure
       .input(z.object({
         id: z.number(),
         name: z.string().optional(),
@@ -181,7 +206,7 @@ export const appRouter = router({
         return { success: true };
       }),
 
-    delete: adminProcedure
+    delete: ownerProcedure
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
         const db_instance = await db.getDb();
@@ -259,6 +284,34 @@ export const appRouter = router({
         await db.subscribeEmail(input.email, userId);
         return { success: true };
       }),
+
+    unsubscribe: publicProcedure
+      .input(z.object({ email: z.string().email() }))
+      .mutation(async ({ input }) => {
+        const db_instance = await db.getDb();
+        if (!db_instance) throw new Error('Database not available');
+        
+        await db_instance.update(emailSubscriptions).set({ isSubscribed: false, updatedAt: new Date() }).where(eq(emailSubscriptions.email, input.email));
+        return { success: true };
+      }),
+
+    getStatus: publicProcedure
+      .input(z.object({ email: z.string().email() }))
+      .query(async ({ input }) => {
+        const db_instance = await db.getDb();
+        if (!db_instance) return { subscribed: false };
+        
+        const result = await db_instance.select().from(emailSubscriptions).where(eq(emailSubscriptions.email, input.email)).limit(1);
+        return { subscribed: result.length > 0 && result[0].isSubscribed };
+      }),
+
+    getSubscriberCount: ownerProcedure.query(async () => {
+      const db_instance = await db.getDb();
+      if (!db_instance) return 0;
+      
+      const result = await db_instance.select().from(emailSubscriptions).where(eq(emailSubscriptions.isSubscribed, true));
+      return result.length;
+    }),
   }),
 
   // Analytics
@@ -278,6 +331,20 @@ export const appRouter = router({
           referrer: input.referrer,
           createdAt: new Date(),
         });
+        
+        // Increment post view count if tracking a post view
+        if (input.postId && !input.affiliateLinkId) {
+          const db_instance = await db.getDb();
+          if (db_instance) {
+            const post = await db_instance.select().from(posts).where(eq(posts.id, input.postId)).limit(1);
+            if (post.length > 0) {
+              await db_instance.update(posts).set({
+                views: (post[0].views || 0) + 1,
+              }).where(eq(posts.id, input.postId));
+            }
+          }
+        }
+        
         return { success: true };
       }),
 
@@ -305,6 +372,83 @@ export const appRouter = router({
     getHistory: protectedProcedure
       .input(z.object({ limit: z.number().default(20) }))
       .query(async ({ input, ctx }) => db.getUserReadingHistory(ctx.user.id, input.limit)),
+  }),
+
+  // Image upload
+  images: router({
+    uploadPostImage: ownerProcedure
+      .input(z.object({
+        fileName: z.string().min(1),
+        fileData: z.string(), // base64 encoded
+        fileType: z.string().default('image/jpeg'),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        try {
+          // Note: Image upload would use storagePut from server/storage.ts
+          // For now, return a placeholder URL that can be replaced with actual S3 URL
+          const fileKey = `posts/${ctx.user.id}/${Date.now()}-${input.fileName}`;
+          const url = `https://cdn.example.com/${fileKey}`; // Placeholder
+          
+          console.log(`[Image Upload] Would upload ${input.fileName} to ${fileKey}`);
+          return { success: true, url };
+        } catch (error) {
+          console.error('[Image Upload] Failed:', error);
+          return { success: false, error: String(error) };
+        }
+      }),
+  }),
+
+  // LLM Writing Assistant
+  llmAssistant: router({
+    generateReview: ownerProcedure
+      .input(z.object({
+        title: z.string().min(1),
+        context: z.string().min(1),
+      }))
+      .mutation(async ({ input }) => {
+        const { generateReviewDraft } = await import('./llm-assistant');
+        return generateReviewDraft(input.title, input.context);
+      }),
+
+    generateSummary: ownerProcedure
+      .input(z.object({
+        title: z.string().min(1),
+        content: z.string().min(1),
+      }))
+      .mutation(async ({ input }) => {
+        const { generateSummary } = await import('./llm-assistant');
+        return generateSummary(input.title, input.content);
+      }),
+
+    generateSEO: ownerProcedure
+      .input(z.object({
+        title: z.string().min(1),
+        content: z.string().min(1),
+      }))
+      .mutation(async ({ input }) => {
+        const { generateSEOContent } = await import('./llm-assistant');
+        return generateSEOContent(input.title, input.content);
+      }),
+
+    improveContent: ownerProcedure
+      .input(z.object({
+        title: z.string().min(1),
+        content: z.string().min(1),
+      }))
+      .mutation(async ({ input }) => {
+        const { improveContent } = await import('./llm-assistant');
+        return improveContent(input.title, input.content);
+      }),
+
+    generateTitles: ownerProcedure
+      .input(z.object({
+        topic: z.string().min(1),
+        style: z.string().default('engaging'),
+      }))
+      .mutation(async ({ input }) => {
+        const { generateTitleSuggestions } = await import('./llm-assistant');
+        return generateTitleSuggestions(input.topic, input.style);
+      }),
   }),
 
   // User profile

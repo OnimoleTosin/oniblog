@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { trpc } from '@/lib/trpc';
-import { Loader2, X, Save } from 'lucide-react';
+import { Loader2, X, Save, Sparkles, Wand2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface AdminPostEditorProps {
@@ -22,10 +22,16 @@ export default function AdminPostEditor({ post, onClose }: AdminPostEditorProps)
   const [affiliateLinks, setAffiliateLinks] = useState(post?.affiliateLinks || '[]');
   const [metaDescription, setMetaDescription] = useState(post?.metaDescription || '');
   const [metaKeywords, setMetaKeywords] = useState(post?.metaKeywords || '');
+  const [showLLMMenu, setShowLLMMenu] = useState(false);
+  const [llmLoading, setLLMLoading] = useState(false);
 
   const { data: categories } = trpc.categories.getAll.useQuery();
   const createPostMutation = trpc.posts.create.useMutation();
   const updatePostMutation = trpc.posts.update.useMutation();
+  const generateReviewMutation = trpc.llmAssistant.generateReview.useMutation();
+  const generateSummaryMutation = trpc.llmAssistant.generateSummary.useMutation();
+  const generateSEOMutation = trpc.llmAssistant.generateSEO.useMutation();
+  const improveContentMutation = trpc.llmAssistant.improveContent.useMutation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,7 +78,114 @@ export default function AdminPostEditor({ post, onClose }: AdminPostEditorProps)
     }
   };
 
-  const isLoading = createPostMutation.isPending || updatePostMutation.isPending;
+  const handleGenerateReview = async () => {
+    if (!title.trim()) {
+      toast.error('Please enter a title first');
+      return;
+    }
+    setLLMLoading(true);
+    try {
+      const result = await generateReviewMutation.mutateAsync({
+        title,
+        context: excerpt || 'Anime and movie review',
+      });
+      if (result.success && result.content) {
+        setContent(result.content);
+        toast.success('Review generated successfully');
+      } else {
+        toast.error(result.error || 'Failed to generate review');
+      }
+    } catch (error) {
+      toast.error('Failed to generate review');
+    } finally {
+      setLLMLoading(false);
+      setShowLLMMenu(false);
+    }
+  };
+
+  const handleGenerateSummary = async () => {
+    if (!title.trim() || !content.trim()) {
+      toast.error('Please enter title and content first');
+      return;
+    }
+    setLLMLoading(true);
+    try {
+      const result = await generateSummaryMutation.mutateAsync({
+        title,
+        content,
+      });
+      if (result.success && result.content) {
+        setExcerpt(result.content);
+        toast.success('Summary generated successfully');
+      } else {
+        toast.error(result.error || 'Failed to generate summary');
+      }
+    } catch (error) {
+      toast.error('Failed to generate summary');
+    } finally {
+      setLLMLoading(false);
+      setShowLLMMenu(false);
+    }
+  };
+
+  const handleGenerateSEO = async () => {
+    if (!title.trim() || !content.trim()) {
+      toast.error('Please enter title and content first');
+      return;
+    }
+    setLLMLoading(true);
+    try {
+      const result = await generateSEOMutation.mutateAsync({
+        title,
+        content,
+      });
+      if (result.success && result.content) {
+        try {
+          const seoData = JSON.parse(result.content);
+          setMetaDescription(seoData.metaDescription || '');
+          setMetaKeywords(seoData.keywords?.join(', ') || '');
+          toast.success('SEO content generated successfully');
+        } catch {
+          setMetaDescription(result.content);
+          toast.success('SEO content generated (check manually)');
+        }
+      } else {
+        toast.error(result.error || 'Failed to generate SEO content');
+      }
+    } catch (error) {
+      toast.error('Failed to generate SEO content');
+    } finally {
+      setLLMLoading(false);
+      setShowLLMMenu(false);
+    }
+  };
+
+  const handleImproveContent = async () => {
+    if (!title.trim() || !content.trim()) {
+      toast.error('Please enter title and content first');
+      return;
+    }
+    setLLMLoading(true);
+    try {
+      const result = await improveContentMutation.mutateAsync({
+        title,
+        content,
+      });
+      if (result.success && result.content) {
+        setContent(result.content);
+        toast.success('Content improved successfully');
+      } else {
+        toast.error(result.error || 'Failed to improve content');
+      }
+    } catch (error) {
+      toast.error('Failed to improve content');
+    } finally {
+      setLLMLoading(false);
+      setShowLLMMenu(false);
+    }
+  };
+
+  const isLoading = createPostMutation.isPending || updatePostMutation.isPending || llmLoading;
 
   return (
     <div className="space-y-6">
@@ -81,14 +194,64 @@ export default function AdminPostEditor({ post, onClose }: AdminPostEditorProps)
         <h2 className="font-orbitron text-2xl font-bold text-neon-magenta">
           {post ? 'EDIT POST' : 'CREATE NEW POST'}
         </h2>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onClose}
-          className="text-muted-foreground hover:text-neon-magenta"
-        >
-          <X size={20} />
-        </Button>
+        <div className="flex gap-2 items-center">
+          <div className="relative">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowLLMMenu(!showLLMMenu)}
+              disabled={llmLoading}
+              className="border-neon-magenta text-neon-magenta hover:bg-neon-magenta/10 font-orbitron"
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              AI ASSIST
+            </Button>
+            {showLLMMenu && (
+              <div className="absolute right-0 mt-2 w-56 bg-black border border-neon-cyan rounded shadow-lg z-10">
+                <button
+                  onClick={handleGenerateReview}
+                  disabled={llmLoading}
+                  className="w-full text-left px-4 py-2 hover:bg-neon-cyan/20 text-neon-cyan text-sm font-space-mono border-b border-neon-cyan/20"
+                >
+                  <Wand2 className="w-3 h-3 inline mr-2" />
+                  GENERATE REVIEW
+                </button>
+                <button
+                  onClick={handleGenerateSummary}
+                  disabled={llmLoading}
+                  className="w-full text-left px-4 py-2 hover:bg-neon-cyan/20 text-neon-cyan text-sm font-space-mono border-b border-neon-cyan/20"
+                >
+                  <Wand2 className="w-3 h-3 inline mr-2" />
+                  GENERATE SUMMARY
+                </button>
+                <button
+                  onClick={handleGenerateSEO}
+                  disabled={llmLoading}
+                  className="w-full text-left px-4 py-2 hover:bg-neon-cyan/20 text-neon-cyan text-sm font-space-mono border-b border-neon-cyan/20"
+                >
+                  <Wand2 className="w-3 h-3 inline mr-2" />
+                  GENERATE SEO
+                </button>
+                <button
+                  onClick={handleImproveContent}
+                  disabled={llmLoading}
+                  className="w-full text-left px-4 py-2 hover:bg-neon-cyan/20 text-neon-cyan text-sm font-space-mono"
+                >
+                  <Wand2 className="w-3 h-3 inline mr-2" />
+                  IMPROVE CONTENT
+                </button>
+              </div>
+            )}
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="text-muted-foreground hover:text-neon-magenta"
+          >
+            <X size={20} />
+          </Button>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
