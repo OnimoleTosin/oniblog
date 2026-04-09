@@ -82,3 +82,7 @@
 - [x] Connect social links (email, WhatsApp, GitHub) to About page
 - [x] Fix category page 404 error - create category listing page and route
 - [x] Implement 5 posts per day automated IMDb integration with scheduler
+
+## Urgent - Seed Initial Data
+- [x] Create seed script to populate 5 initial blog posts from IMDb data
+- [x] Run seed script to populate database with initial posts for testing
