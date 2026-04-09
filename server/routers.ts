@@ -168,6 +168,15 @@ export const appRouter = router({
   categories: router({
     getAll: publicProcedure.query(() => db.getAllCategories()),
     
+    getById: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        const db_instance = await db.getDb();
+        if (!db_instance) return null;
+        const result = await db_instance.select().from(categories).where(eq(categories.id, input.id)).limit(1);
+        return result.length > 0 ? result[0] : null;
+      }),
+    
     getBySlug: publicProcedure
       .input(z.object({ slug: z.string() }))
       .query(async ({ input }) => db.getCategoryBySlug(input.slug)),

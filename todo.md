@@ -77,3 +77,8 @@
 
 ## Bug Fixes
 - [x] Fix /about route 404 error - create About page component and add route
+
+## User Requests - Current Sprint
+- [x] Connect social links (email, WhatsApp, GitHub) to About page
+- [x] Fix category page 404 error - create category listing page and route
+- [x] Implement 5 posts per day automated IMDb integration with scheduler

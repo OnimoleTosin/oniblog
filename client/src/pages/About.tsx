@@ -147,27 +147,45 @@ export default function About() {
                 Have feedback, suggestions, or want to collaborate? Reach out to us:
               </p>
               <div className="flex flex-wrap gap-4">
-                <Button
-                  variant="outline"
-                  className="border-neon-cyan text-neon-cyan hover:bg-neon-cyan/10 font-orbitron"
+                <a
+                  href="mailto:Onimolesodiq282@gmail.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
-                  <Mail className="w-4 h-4 mr-2" />
-                  EMAIL
-                </Button>
-                <Button
-                  variant="outline"
-                  className="border-neon-magenta text-neon-magenta hover:bg-neon-magenta/10 font-orbitron"
+                  <Button
+                    variant="outline"
+                    className="border-neon-cyan text-neon-cyan hover:bg-neon-cyan/10 font-orbitron"
+                  >
+                    <Mail className="w-4 h-4 mr-2" />
+                    EMAIL
+                  </Button>
+                </a>
+                <a
+                  href="https://wa.me/2349169623604"
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
-                  <Twitter className="w-4 h-4 mr-2" />
-                  TWITTER
-                </Button>
-                <Button
-                  variant="outline"
-                  className="border-neon-green text-neon-green hover:bg-neon-green/10 font-orbitron"
+                  <Button
+                    variant="outline"
+                    className="border-neon-magenta text-neon-magenta hover:bg-neon-magenta/10 font-orbitron"
+                  >
+                    <Twitter className="w-4 h-4 mr-2" />
+                    WHATSAPP
+                  </Button>
+                </a>
+                <a
+                  href="https://github.com/OnimoleTosin"
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
-                  <Github className="w-4 h-4 mr-2" />
-                  GITHUB
-                </Button>
+                  <Button
+                    variant="outline"
+                    className="border-neon-green text-neon-green hover:bg-neon-green/10 font-orbitron"
+                  >
+                    <Github className="w-4 h-4 mr-2" />
+                    GITHUB
+                  </Button>
+                </a>
               </div>
             </Card>
 

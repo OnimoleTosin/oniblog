@@ -7,6 +7,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
+import Category from "./pages/Category";
 import About from "./pages/About";
 import Profile from "./pages/Profile";
 import { Login, Signup } from "./pages/Auth";
@@ -20,6 +21,7 @@ function Router() {
       <Route path={"/"} component={Home} />
       <Route path={"/blog"} component={Blog} />
       <Route path={"/blog/:slug"} component={BlogPost} />
+      <Route path={"/category/:categoryId"} component={Category} />
       <Route path={"/about"} component={About} />
       <Route path={"/profile"} component={Profile} />
       <Route path={"/auth/login"} component={Login} />
