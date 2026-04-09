@@ -74,3 +74,6 @@
 - [x] LLM assistant UI integration in AdminPostEditor
 - [x] View count tracking (incremented on post clicks)
 - [x] Post-first-publish detection (only notify once)
+
+## Bug Fixes
+- [x] Fix /about route 404 error - create About page component and add route
