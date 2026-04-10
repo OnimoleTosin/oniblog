@@ -86,3 +86,12 @@
 ## Urgent - Seed Initial Data
 - [x] Create seed script to populate 5 initial blog posts from IMDb data
 - [x] Run seed script to populate database with initial posts for testing
+
+## Comment Section Implementation
+- [x] Create CommentSection component with form and display
+- [x] Add comment form validation and submission
+- [x] Add comment display with user info and timestamps
+- [x] Implement real-time comment updates (via refetch)
+- [x] Add comment styling with retro-futuristic aesthetic
+- [x] Integrate comments into BlogPost page
+- [x] Test comment creation and display (2 tests passing)
