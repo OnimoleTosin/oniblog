@@ -95,3 +95,7 @@
 - [x] Add comment styling with retro-futuristic aesthetic
 - [x] Integrate comments into BlogPost page
 - [x] Test comment creation and display (2 tests passing)
+
+## Critical Bug Fixes - Current Sprint
+- [x] Fix broken featured images - OMDB/IMDb URLs are working correctly
+- [x] Fix category page 404 error - seeded categories database

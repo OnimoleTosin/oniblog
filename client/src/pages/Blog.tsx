@@ -5,6 +5,23 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { trpc } from '@/lib/trpc';
 import { Search, Filter, ChevronRight } from 'lucide-react';
+import PostImage from '@/components/PostImage';
+
+interface Post {
+  id: number;
+  title: string;
+  slug: string;
+  content: string;
+  excerpt: string | null;
+  featuredImage: string | null;
+  thumbnail: string | null;
+  categoryId: number;
+  authorId: number;
+  status: 'draft' | 'published';
+  views: number;
+  publishedAt: Date | null;
+  createdAt: Date;
+}
 
 export default function Blog() {
   const search = useSearch();
@@ -118,10 +135,11 @@ export default function Blog() {
                     <Card className="h-full overflow-hidden hover:border-neon-cyan transition-all duration-300 hover:shadow-neon-cyan group cursor-pointer flex flex-col">
                       {post.featuredImage && (
                         <div className="relative h-48 overflow-hidden bg-background">
-                          <img
+                          <PostImage
                             src={post.featuredImage}
                             alt={post.title}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                            containerClassName="relative w-full h-full"
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
                         </div>
