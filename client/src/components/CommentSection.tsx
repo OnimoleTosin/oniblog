@@ -1,20 +1,31 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
-import { Loader2, Send, MessageCircle } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import { useAuth } from '@/_core/hooks/useAuth';
+import { Send, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { formatDistanceToNow } from 'date-fns';
 
 interface CommentSectionProps {
   postId: number;
 }
 
+interface Comment {
+  id: number;
+  postId: number;
+  authorName: string;
+  authorEmail?: string | null;
+  content: string;
+  status: 'approved' | 'pending' | 'rejected';
+  createdAt: Date;
+}
+
 export function CommentSection({ postId }: CommentSectionProps) {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const { user, isAuthenticated } = useAuth();
+  const [authorName, setAuthorName] = useState('');
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -26,9 +37,10 @@ export function CommentSection({ postId }: CommentSectionProps) {
   // Create comment mutation
   const createCommentMutation = trpc.comments.create.useMutation({
     onSuccess: () => {
-      setName('');
-      setEmail('');
       setContent('');
+      if (!isAuthenticated) {
+        setAuthorName('');
+      }
       setIsSubmitting(false);
       toast.success('Comment posted successfully!');
       refetch();
@@ -42,101 +54,99 @@ export function CommentSection({ postId }: CommentSectionProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!name.trim() || !email.trim() || !content.trim()) {
-      toast.error('Please fill in all fields');
+    if (!content.trim()) {
+      toast.error('Please enter a comment');
       return;
     }
 
-    // Simple email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      toast.error('Please enter a valid email address');
+    if (!isAuthenticated && !authorName.trim()) {
+      toast.error('Please enter your name');
       return;
     }
 
     setIsSubmitting(true);
     await createCommentMutation.mutateAsync({
       postId,
-      authorName: name.trim(),
-      authorEmail: email.trim(),
+      authorName: isAuthenticated ? user?.name || 'Anonymous' : authorName.trim(),
+      authorEmail: isAuthenticated ? (user?.email || undefined) : undefined,
       content: content.trim(),
     });
   };
 
+  const approvedComments = (comments as Comment[]).filter(c => c.status === 'approved');
+
   return (
-    <div className="mt-12 pt-8 border-t border-cyan-500/30">
+    <div className="mt-12 pt-8 border-t border-neon-cyan/30">
       <div className="space-y-8">
         {/* Comments Header */}
-        <div className="flex items-center gap-3">
-          <MessageCircle className="w-6 h-6 text-cyan-400" />
-          <h3 className="text-2xl font-bold text-white glitch-text">
-            COMMENTS ({comments.length})
+        <div>
+          <h3 className="font-orbitron text-2xl font-bold text-neon-cyan glitch mb-2">
+            COMMENTS ({approvedComments.length})
           </h3>
+          <p className="font-space-mono text-sm text-muted-foreground">
+            [ COMMUNITY DISCUSSION THREAD ]
+          </p>
         </div>
 
         {/* Comment Form */}
-        <Card className="bg-black/50 border border-cyan-500/30 p-6 backdrop-blur-sm">
+        <Card className="bg-background/50 border border-neon-cyan/30 p-6">
           <form onSubmit={handleSubmit} className="space-y-4">
-            <h4 className="text-lg font-semibold text-cyan-400 mb-4">
-              [LEAVE YOUR THOUGHTS]
+            <h4 className="font-orbitron text-lg font-bold text-neon-magenta mb-4">
+              LEAVE YOUR THOUGHTS
             </h4>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Name field - only for non-authenticated users */}
+            {!isAuthenticated ? (
               <div>
-                <label className="block text-sm font-mono text-cyan-300 mb-2">
-                  NAME *
+                <label className="block font-space-mono text-sm text-neon-magenta mb-2">
+                  YOUR NAME *
                 </label>
                 <Input
                   type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Your name"
+                  value={authorName}
+                  onChange={(e) => setAuthorName(e.target.value)}
+                  placeholder="Enter your name"
                   disabled={isSubmitting}
-                  className="bg-black/30 border border-cyan-500/50 text-white placeholder-gray-500 focus:border-cyan-400"
+                  className="bg-input border-neon-cyan/30 focus:border-neon-cyan font-space-mono text-sm"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-mono text-cyan-300 mb-2">
-                  EMAIL *
-                </label>
-                <Input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your@email.com"
-                  disabled={isSubmitting}
-                  className="bg-black/30 border border-cyan-500/50 text-white placeholder-gray-500 focus:border-cyan-400"
-                />
+            ) : (
+              <div className="p-3 bg-neon-cyan/10 border border-neon-cyan/30 rounded-sm">
+                <p className="font-space-mono text-sm text-neon-green">
+                  Posting as: <span className="text-neon-cyan font-bold">{user?.name}</span>
+                </p>
               </div>
-            </div>
+            )}
 
+            {/* Comment field */}
             <div>
-              <label className="block text-sm font-mono text-cyan-300 mb-2">
+              <label className="block font-space-mono text-sm text-neon-magenta mb-2">
                 COMMENT *
               </label>
               <Textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                placeholder="Share your thoughts about this post..."
+                placeholder="Share your thoughts..."
                 disabled={isSubmitting}
                 rows={4}
-                className="bg-black/30 border border-cyan-500/50 text-white placeholder-gray-500 focus:border-cyan-400 resize-none"
+                className="bg-input border-neon-cyan/30 focus:border-neon-cyan font-space-mono text-sm resize-none"
               />
             </div>
 
+            {/* Submit button */}
             <Button
               type="submit"
-              disabled={isSubmitting}
-              className="w-full bg-cyan-500 hover:bg-cyan-600 text-black font-bold py-2 px-4 rounded flex items-center justify-center gap-2 transition-all duration-200"
+              disabled={isSubmitting || !content.trim() || (!isAuthenticated && !authorName.trim())}
+              className="w-full bg-neon-cyan text-background hover:bg-neon-green font-orbitron font-bold"
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   POSTING...
                 </>
               ) : (
                 <>
-                  <Send className="w-4 h-4" />
+                  <Send className="w-4 h-4 mr-2" />
                   POST COMMENT
                 </>
               )}
@@ -148,46 +158,36 @@ export function CommentSection({ postId }: CommentSectionProps) {
         <div className="space-y-4">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin text-cyan-400" />
+              <Loader2 className="w-6 h-6 animate-spin text-neon-cyan" />
             </div>
-          ) : comments.length === 0 ? (
-            <Card className="bg-black/50 border border-cyan-500/30 p-6 text-center">
-              <p className="text-gray-400 font-mono">
-                [NO COMMENTS YET] Be the first to share your thoughts...
+          ) : approvedComments.length === 0 ? (
+            <Card className="bg-background/50 border border-neon-magenta/30 p-6 text-center">
+              <p className="font-space-mono text-muted-foreground">
+                [ NO COMMENTS YET ] Be the first to share your thoughts...
               </p>
             </Card>
           ) : (
-            comments.map((comment) => (
+            approvedComments.map((comment) => (
               <Card
                 key={comment.id}
-                className="bg-black/50 border border-cyan-500/20 p-5 hover:border-cyan-500/50 transition-all duration-200 backdrop-blur-sm"
+                className="bg-background/50 border border-neon-cyan/20 hover:border-neon-cyan/50 p-5 transition-all duration-200"
               >
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <h5 className="font-bold text-cyan-400 text-lg">
+                    <h5 className="font-orbitron font-bold text-neon-cyan text-lg">
                       {comment.authorName}
                     </h5>
-                    <p className="text-xs text-gray-500 font-mono">
-                      {comment.authorEmail}
-                    </p>
                   </div>
-                  <span className="text-xs text-gray-500 font-mono">
+                  <span className="font-space-mono text-xs text-muted-foreground">
                     {formatDistanceToNow(new Date(comment.createdAt), {
                       addSuffix: true,
                     })}
                   </span>
                 </div>
 
-                <p className="text-gray-300 leading-relaxed whitespace-pre-wrap">
+                <p className="font-space-mono text-sm text-foreground leading-relaxed whitespace-pre-wrap">
                   {comment.content}
                 </p>
-
-                {/* Decorative elements */}
-                <div className="mt-3 pt-3 border-t border-cyan-500/10 flex gap-2">
-                  <span className="text-xs text-cyan-500/50 font-mono">
-                    [ID: {comment.id}]
-                  </span>
-                </div>
               </Card>
             ))
           )}

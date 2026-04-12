@@ -99,3 +99,7 @@
 ## Critical Bug Fixes - Current Sprint
 - [x] Fix broken featured images - OMDB/IMDb URLs are working correctly
 - [x] Fix category page 404 error - seeded categories database
+
+## User Feedback - Urgent Fixes
+- [x] Replace broken image URLs with working placeholder/gradient solution (via.placeholder.com fallback)
+- [x] Refactor comment section: non-logged users (name + comment), logged-in users (comment only)
