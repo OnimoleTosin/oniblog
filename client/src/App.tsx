@@ -8,7 +8,9 @@ import Home from "./pages/Home";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import Category from "./pages/Category";
+import Categories from "./pages/Categories";
 import About from "./pages/About";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Profile from "./pages/Profile";
 import { Login, Signup } from "./pages/Auth";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -21,8 +23,10 @@ function Router() {
       <Route path={"/"} component={Home} />
       <Route path={"/blog"} component={Blog} />
       <Route path={"/blog/:slug"} component={BlogPost} />
+      <Route path={"/categories"} component={Categories} />
       <Route path={"/category/:categoryId"} component={Category} />
       <Route path={"/about"} component={About} />
+      <Route path={"/privacy"} component={PrivacyPolicy} />
       <Route path={"/profile"} component={Profile} />
       <Route path={"/auth/login"} component={Login} />
       <Route path={"/auth/signup"} component={Signup} />

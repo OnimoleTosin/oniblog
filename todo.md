@@ -103,3 +103,8 @@
 ## User Feedback - Urgent Fixes
 - [x] Replace broken image URLs with working placeholder/gradient solution (via.placeholder.com fallback)
 - [x] Refactor comment section: non-logged users (name + comment), logged-in users (comment only)
+
+## Final Fixes - Categories & Privacy Policy
+- [x] Fix /categories route 404 - create categories listing page with category browsing
+- [x] Create Privacy Policy page with email collection, analytics, affiliate links, data retention, deletion requests
+- [x] Add both routes to App.tsx navigation
