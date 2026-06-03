@@ -1,5 +1,3 @@
-import { COOKIE_NAME } from "@shared/const";
-import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
 import { z } from "zod";
@@ -13,7 +11,7 @@ import { ENV } from "./_core/env";
 
 // Owner-only procedure (strict owner enforcement)
 const ownerProcedure = protectedProcedure.use(({ ctx, next }) => {
-  if (ctx.user.openId !== ENV.ownerOpenId) {
+  if (!ctx.user || ctx.user.openId !== ENV.ownerOpenId) {
     throw new TRPCError({ code: 'FORBIDDEN', message: 'Owner access required' });
   }
   return next({ ctx });
@@ -27,9 +25,9 @@ export const appRouter = router({
   
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
-    logout: publicProcedure.mutation(({ ctx }) => {
-      const cookieOptions = getSessionCookieOptions(ctx.req);
-      ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
+    logout: publicProcedure.mutation(() => {
+      // Firebase handles logout on the client side
+      // This endpoint is kept for compatibility
       return { success: true } as const;
     }),
   }),

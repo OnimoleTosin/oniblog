@@ -1,16 +1,21 @@
 import { useState } from 'react';
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Menu, X, LogOut, User, Settings } from 'lucide-react';
-import { getLoginUrl } from '@/const';
 
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
+  const [, setLocation] = useLocation();
   const { user, isAuthenticated, logout } = useAuth();
 
   const handleLogout = async () => {
     await logout();
+    setIsOpen(false);
+  };
+
+  const handleLoginClick = () => {
+    setLocation('/auth/login');
     setIsOpen(false);
   };
 
@@ -76,11 +81,14 @@ export default function Navigation() {
             </div>
           ) : (
             <div className="flex items-center gap-3">
-              <a href={getLoginUrl()}>
-                <Button variant="outline" size="sm" className="border-neon-cyan text-neon-cyan hover:bg-neon-cyan hover:text-background font-space-mono">
-                  LOGIN
-                </Button>
-              </a>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleLoginClick}
+                className="border-neon-cyan text-neon-cyan hover:bg-neon-cyan hover:text-background font-space-mono"
+              >
+                LOGIN
+              </Button>
               <Link href="/auth/signup">
                 <Button size="sm" className="bg-neon-cyan text-background hover:bg-neon-green font-space-mono">
                   SIGNUP
@@ -147,11 +155,14 @@ export default function Navigation() {
                 </>
               ) : (
                 <>
-                  <a href={getLoginUrl()} className="w-full">
-                    <Button variant="outline" size="sm" className="w-full border-neon-cyan text-neon-cyan hover:bg-neon-cyan hover:text-background font-space-mono">
-                      LOGIN
-                    </Button>
-                  </a>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleLoginClick}
+                    className="w-full border-neon-cyan text-neon-cyan hover:bg-neon-cyan hover:text-background font-space-mono"
+                  >
+                    LOGIN
+                  </Button>
                   <Link href="/auth/signup" className="w-full">
                     <Button size="sm" className="w-full bg-neon-cyan text-background hover:bg-neon-green font-space-mono">
                       SIGNUP

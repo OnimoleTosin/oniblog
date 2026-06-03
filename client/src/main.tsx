@@ -5,8 +5,8 @@ import { httpBatchLink, TRPCClientError } from "@trpc/client";
 import { createRoot } from "react-dom/client";
 import superjson from "superjson";
 import App from "./App";
-import { getLoginUrl } from "./const";
 import "./index.css";
+import { getIdToken } from "./lib/firebaseAuth";
 
 const queryClient = new QueryClient();
 
@@ -18,7 +18,8 @@ const redirectToLoginIfUnauthorized = (error: unknown) => {
 
   if (!isUnauthorized) return;
 
-  window.location.href = getLoginUrl();
+  // Redirect to login page
+  window.location.href = "/auth/login";
 };
 
 queryClient.getQueryCache().subscribe(event => {
@@ -42,10 +43,19 @@ const trpcClient = trpc.createClient({
     httpBatchLink({
       url: "/api/trpc",
       transformer: superjson,
-      fetch(input, init) {
+      async fetch(input, init) {
+        // Get Firebase ID token and attach to Authorization header
+        const token = await getIdToken();
+        const headers = new Headers(init?.headers);
+        
+        if (token) {
+          headers.set('Authorization', `Bearer ${token}`);
+        }
+
         return globalThis.fetch(input, {
           ...(init ?? {}),
           credentials: "include",
+          headers,
         });
       },
     }),

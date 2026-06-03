@@ -108,3 +108,42 @@
 - [x] Fix /categories route 404 - create categories listing page with category browsing
 - [x] Create Privacy Policy page with email collection, analytics, affiliate links, data retention, deletion requests
 - [x] Add both routes to App.tsx navigation
+
+## Firebase Authentication Migration
+- [x] Install Firebase SDK and dependencies
+- [x] Create Firebase config file with provided credentials
+- [x] Create Firebase auth service (signup, login, logout, Google sign-in)
+- [x] Update frontend signup form to use Firebase
+- [x] Update frontend login form to use Firebase
+- [x] Add "Sign in with Google" button
+- [x] Remove ManusAuth imports from frontend
+- [x] Update backend to verify Firebase ID tokens
+- [x] Install Firebase Admin SDK
+- [x] Create Firebase token verification middleware
+- [x] Update tRPC protected routes to use Firebase auth
+- [x] Remove ManusAuth from backend routers
+- [x] Test authentication flow end-to-end
+
+## Social Media Links
+- [x] Update footer component with social media icons
+- [x] Add WhatsApp, Instagram, LinkedIn, GitHub, Email links
+- [x] Ensure links open in new tab
+- [x] Make footer responsive and styled consistently
+
+
+## Firebase Migration - COMPLETED
+- [x] Firebase SDK installed and configured
+- [x] Firebase auth service created with signup, login, logout, Google sign-in
+- [x] Frontend auth forms updated to use Firebase
+- [x] ManusAuth removed from frontend (Navigation.tsx uses Firebase login)
+- [x] Backend Firebase token verification middleware created
+- [x] tRPC requests now include Firebase ID token in Authorization header
+- [x] useAuth hook updated to work with Firebase
+- [x] main.tsx updated to attach Firebase token to all requests
+- [x] All 10 tests passing (auth.logout, comments, posts)
+
+## Social Media Links - COMPLETED
+- [x] Footer updated with all 5 social icons: Email, WhatsApp, GitHub, LinkedIn, Instagram
+- [x] All links open in new tab with proper accessibility labels
+- [x] WhatsApp link uses wa.me/ format
+- [x] Footer responsive and styled consistently with retro-futuristic aesthetic
