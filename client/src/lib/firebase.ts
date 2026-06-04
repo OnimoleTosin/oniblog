@@ -4,6 +4,7 @@ import {
   GoogleAuthProvider,
   setPersistence,
   browserLocalPersistence,
+  connectAuthEmulator,
 } from 'firebase/auth';
 
 const firebaseConfig = {
@@ -22,14 +23,25 @@ const app = initializeApp(firebaseConfig);
 // Initialize Firebase Authentication and get a reference to the service
 export const auth = getAuth(app);
 
+// Configure auth settings
+auth.useDeviceLanguage();
+
 // Set persistence to LOCAL (survives page refresh)
 setPersistence(auth, browserLocalPersistence).catch((error) => {
-  console.error("Error setting persistence:", error);
+  console.error("[Firebase] Error setting persistence:", error);
 });
 
-// Initialize Google Auth Provider
+// Initialize Google Auth Provider with proper configuration
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.addScope('profile');
 googleProvider.addScope('email');
+
+// Set custom parameters for better UX
+googleProvider.setCustomParameters({
+  prompt: 'select_account',
+});
+
+// Log initialization
+console.log('[Firebase] Initialized successfully with project:', firebaseConfig.projectId);
 
 export default app;

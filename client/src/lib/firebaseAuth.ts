@@ -7,12 +7,17 @@ import {
   onAuthStateChanged,
   setPersistence,
   browserLocalPersistence,
+  connectAuthEmulator,
 } from 'firebase/auth';
 import { auth as firebaseAuth, googleProvider } from './firebase';
 
 export { firebaseAuth as auth };
 
 const auth = firebaseAuth;
+
+// Maximum retry attempts for network failures
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 1000; // 1 second
 
 export interface AuthUser {
   uid: string;
@@ -22,27 +27,72 @@ export interface AuthUser {
 }
 
 /**
+ * Retry helper for network failures
+ */
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  maxRetries = MAX_RETRIES
+): Promise<T> {
+  let lastError: any;
+  
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      lastError = error;
+      
+      // Only retry on network errors
+      if (
+        error?.code === 'auth/network-request-failed' ||
+        error?.message?.includes('network')
+      ) {
+        if (i < maxRetries - 1) {
+          // Wait before retrying
+          await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * (i + 1)));
+          continue;
+        }
+      } else {
+        // Don't retry on non-network errors
+        throw error;
+      }
+    }
+  }
+  
+  throw lastError;
+}
+
+/**
+ * Initialize Firebase persistence
+ */
+export async function initializeFirebasePersistence(): Promise<void> {
+  try {
+    await setPersistence(auth, browserLocalPersistence);
+    console.log('[Firebase] Persistence initialized');
+  } catch (error) {
+    console.error('[Firebase] Error setting persistence:', error);
+  }
+}
+
+/**
  * Sign up with email and password
  */
 export const signUp = async (email: string, password: string, displayName?: string): Promise<AuthUser> => {
   try {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    await initializeFirebasePersistence();
+    
+    const userCredential = await withRetry(() =>
+      createUserWithEmailAndPassword(auth, email, password)
+    );
     const user = userCredential.user;
-
-    // Update display name if provided
-    if (displayName) {
-      // Note: updateProfile is available but we'll keep it simple for now
-      // You can add it later if needed
-    }
 
     return {
       uid: user.uid,
       email: user.email,
-      displayName: user.displayName,
+      displayName: user.displayName || displayName || null,
       photoURL: user.photoURL,
     };
-  } catch (error) {
-    console.error('Sign up error:', error);
+  } catch (error: any) {
+    console.error('[Firebase] Sign up error:', error);
     throw error;
   }
 };
@@ -52,8 +102,11 @@ export const signUp = async (email: string, password: string, displayName?: stri
  */
 export const signIn = async (email: string, password: string): Promise<AuthUser> => {
   try {
-    await setPersistence(auth, browserLocalPersistence);
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    await initializeFirebasePersistence();
+    
+    const userCredential = await withRetry(() =>
+      signInWithEmailAndPassword(auth, email, password)
+    );
     const user = userCredential.user;
 
     return {
@@ -62,8 +115,8 @@ export const signIn = async (email: string, password: string): Promise<AuthUser>
       displayName: user.displayName,
       photoURL: user.photoURL,
     };
-  } catch (error) {
-    console.error('Sign in error:', error);
+  } catch (error: any) {
+    console.error('[Firebase] Sign in error:', error);
     throw error;
   }
 };
@@ -73,8 +126,16 @@ export const signIn = async (email: string, password: string): Promise<AuthUser>
  */
 export const signInWithGoogle = async (): Promise<AuthUser> => {
   try {
-    await setPersistence(auth, browserLocalPersistence);
-    const result = await signInWithPopup(auth, googleProvider);
+    await initializeFirebasePersistence();
+    
+    // Set custom parameters for Google Sign-in
+    googleProvider.setCustomParameters({
+      prompt: 'select_account',
+    });
+
+    const result = await withRetry(() =>
+      signInWithPopup(auth, googleProvider)
+    );
     const user = result.user;
 
     return {
@@ -83,8 +144,18 @@ export const signInWithGoogle = async (): Promise<AuthUser> => {
       displayName: user.displayName,
       photoURL: user.photoURL,
     };
-  } catch (error) {
-    console.error('Google sign in error:', error);
+  } catch (error: any) {
+    console.error('[Firebase] Google sign in error:', error);
+    
+    // Provide more helpful error messages
+    if (error?.code === 'auth/popup-blocked') {
+      throw new Error('Popup was blocked. Please allow popups and try again.');
+    } else if (error?.code === 'auth/popup-closed-by-user') {
+      throw new Error('Sign-in was cancelled.');
+    } else if (error?.code === 'auth/network-request-failed') {
+      throw new Error('Network error. Please check your connection and try again.');
+    }
+    
     throw error;
   }
 };
@@ -95,8 +166,9 @@ export const signInWithGoogle = async (): Promise<AuthUser> => {
 export const logout = async (): Promise<void> => {
   try {
     await signOut(auth);
+    console.log('[Firebase] Logged out successfully');
   } catch (error) {
-    console.error('Sign out error:', error);
+    console.error('[Firebase] Sign out error:', error);
     throw error;
   }
 };
@@ -115,11 +187,11 @@ export const getIdToken = async (): Promise<string | null> => {
   try {
     const user = firebaseAuth.currentUser;
     if (user) {
-      return await user.getIdToken();
+      return await user.getIdToken(true); // Force refresh
     }
     return null;
   } catch (error) {
-    console.error('Error getting ID token:', error);
+    console.error('[Firebase] Error getting ID token:', error);
     return null;
   }
 };

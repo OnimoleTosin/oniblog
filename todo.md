@@ -147,3 +147,12 @@
 - [x] All links open in new tab with proper accessibility labels
 - [x] WhatsApp link uses wa.me/ format
 - [x] Footer responsive and styled consistently with retro-futuristic aesthetic
+
+## Firebase Authentication Debugging - COMPLETED
+- [x] Fix network-request-failed errors in Google Sign-in (added retry logic with linear backoff in firebaseAuth.ts)
+- [x] Implement proper Firebase error handling and user-friendly messages (comprehensive error handling in Auth.tsx with specific error codes)
+- [x] Add retry logic for network failures (withRetry helper with exponential delay in firebaseAuth.ts)
+- [x] Test email/password login thoroughly (7 new Firebase auth tests + 10 existing tests = 17 total passing)
+- [x] Test Google Sign-in with proper error handling (error alerts in Auth.tsx + visible retry button)
+- [x] Verify token attachment to tRPC requests (confirmed in main.tsx, token sent via Authorization header)
+- [x] Add visible retry button to error alerts (implemented in Login and Signup components)

@@ -16,23 +16,48 @@ export function useAuth(options?: UseAuthOptions) {
     options ?? {};
   const utils = trpc.useUtils();
   const [firebaseToken, setFirebaseToken] = useState<string | null>(null);
+  const [firebaseReady, setFirebaseReady] = useState(false);
 
-  // Get Firebase ID token
+  // Initialize Firebase auth state listener
   useEffect(() => {
+    let isMounted = true;
+
     const unsubscribe = auth.onAuthStateChanged(async (user: any) => {
-      if (user) {
-        const token = await getIdToken();
-        setFirebaseToken(token);
-      } else {
-        setFirebaseToken(null);
+      if (!isMounted) return;
+
+      try {
+        if (user) {
+          const token = await getIdToken();
+          if (isMounted) {
+            setFirebaseToken(token);
+          }
+        } else {
+          if (isMounted) {
+            setFirebaseToken(null);
+          }
+        }
+      } catch (error) {
+        console.error('[useAuth] Error getting Firebase token:', error);
+        if (isMounted) {
+          setFirebaseToken(null);
+        }
+      } finally {
+        if (isMounted) {
+          setFirebaseReady(true);
+        }
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
   }, []);
 
+  // Only query backend after Firebase is ready
   const meQuery = trpc.auth.me.useQuery(undefined, {
-    retry: false,
+    enabled: firebaseReady,
+    retry: 1,
     refetchOnWindowFocus: false,
   });
 
@@ -52,14 +77,16 @@ export function useAuth(options?: UseAuthOptions) {
         await logoutMutation.mutateAsync();
       } catch (error) {
         // Ignore errors from backend logout
+        console.error('[useAuth] Backend logout error:', error);
       }
     } catch (error: unknown) {
-      console.error('Logout error:', error);
+      console.error('[useAuth] Logout error:', error);
       throw error;
     } finally {
       utils.auth.me.setData(undefined, null);
       await utils.auth.me.invalidate();
       setFirebaseToken(null);
+      setFirebaseReady(false);
       setLocation('/');
     }
   }, [logoutMutation, utils, setLocation]);
@@ -71,10 +98,11 @@ export function useAuth(options?: UseAuthOptions) {
     );
     return {
       user: meQuery.data ?? null,
-      loading: meQuery.isLoading || logoutMutation.isPending,
+      loading: !firebaseReady || meQuery.isLoading || logoutMutation.isPending,
       error: meQuery.error ?? logoutMutation.error ?? null,
       isAuthenticated: Boolean(meQuery.data),
       firebaseToken,
+      firebaseReady,
     };
   }, [
     meQuery.data,
@@ -83,10 +111,12 @@ export function useAuth(options?: UseAuthOptions) {
     logoutMutation.error,
     logoutMutation.isPending,
     firebaseToken,
+    firebaseReady,
   ]);
 
   useEffect(() => {
     if (!redirectOnUnauthenticated) return;
+    if (!firebaseReady) return;
     if (meQuery.isLoading || logoutMutation.isPending) return;
     if (state.user) return;
     if (typeof window === "undefined") return;
@@ -96,6 +126,7 @@ export function useAuth(options?: UseAuthOptions) {
   }, [
     redirectOnUnauthenticated,
     redirectPath,
+    firebaseReady,
     logoutMutation.isPending,
     meQuery.isLoading,
     state.user,

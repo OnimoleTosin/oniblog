@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { signIn, signInWithGoogle, signUp } from '@/lib/firebaseAuth';
-import { Zap, ArrowRight, Loader2, Mail, Lock, User } from 'lucide-react';
+import { Zap, ArrowRight, Loader2, Mail, Lock, User, AlertCircle, RotateCw } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function Login() {
@@ -13,6 +13,7 @@ export function Login() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,17 +23,31 @@ export function Login() {
     }
 
     setLoading(true);
+    setError(null);
     try {
       await signIn(email, password);
       toast.success('Login successful!');
       setLocation('/');
     } catch (error: any) {
       console.error('Login error:', error);
-      const errorMessage = error.code === 'auth/user-not-found' 
-        ? 'User not found. Please sign up first.'
-        : error.code === 'auth/wrong-password'
-        ? 'Incorrect password.'
-        : error.message || 'Login failed. Please try again.';
+      
+      let errorMessage = 'Login failed. Please try again.';
+      
+      if (error?.code === 'auth/user-not-found') {
+        errorMessage = 'User not found. Please sign up first.';
+      } else if (error?.code === 'auth/wrong-password') {
+        errorMessage = 'Incorrect password.';
+      } else if (error?.code === 'auth/invalid-email') {
+        errorMessage = 'Invalid email address.';
+      } else if (error?.code === 'auth/too-many-requests') {
+        errorMessage = 'Too many login attempts. Please try again later.';
+      } else if (error?.code === 'auth/network-request-failed') {
+        errorMessage = 'Network error. Please check your connection and try again.';
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
+      setError(errorMessage);
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -41,15 +56,36 @@ export function Login() {
 
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
+    setError(null);
     try {
       await signInWithGoogle();
       toast.success('Login successful!');
       setLocation('/');
     } catch (error: any) {
       console.error('Google login error:', error);
-      toast.error('Google login failed. Please try again.');
+      
+      let errorMessage = 'Google login failed. Please try again.';
+      
+      if (error?.code === 'auth/popup-blocked') {
+        errorMessage = 'Popup was blocked. Please allow popups and try again.';
+      } else if (error?.code === 'auth/popup-closed-by-user') {
+        errorMessage = 'Sign-in was cancelled.';
+      } else if (error?.code === 'auth/network-request-failed') {
+        errorMessage = 'Network error. Please check your connection and try again.';
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setGoogleLoading(false);
+    }
+  };
+
+  const retryLastAction = async () => {
+    if (email && password) {
+      await handleEmailLogin({ preventDefault: () => {} } as React.FormEvent);
     }
   };
 
@@ -79,6 +115,28 @@ export function Login() {
             </p>
           </div>
 
+          {/* Error Alert */}
+          {error && (
+            <div className="mb-6 p-4 border border-red-500/50 bg-red-500/10 rounded-sm">
+              <div className="flex gap-3 mb-3">
+                <AlertCircle size={20} className="text-red-500 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="font-space-mono text-sm text-red-500">{error}</p>
+                </div>
+              </div>
+              <Button
+                onClick={retryLastAction}
+                disabled={loading || googleLoading}
+                variant="outline"
+                size="sm"
+                className="w-full border-red-500/50 text-red-500 hover:bg-red-500/10 font-space-mono text-xs"
+              >
+                <RotateCw size={14} className="mr-2" />
+                RETRY
+              </Button>
+            </div>
+          )}
+
           {/* Email/Password Form */}
           <form onSubmit={handleEmailLogin} className="space-y-4 mb-6">
             <div>
@@ -91,7 +149,7 @@ export function Login() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10 bg-background border-neon-cyan/30 text-foreground placeholder:text-muted-foreground"
-                  disabled={loading}
+                  disabled={loading || googleLoading}
                 />
               </div>
             </div>
@@ -106,14 +164,14 @@ export function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="pl-10 bg-background border-neon-cyan/30 text-foreground placeholder:text-muted-foreground"
-                  disabled={loading}
+                  disabled={loading || googleLoading}
                 />
               </div>
             </div>
 
             <Button
               type="submit"
-              disabled={loading}
+              disabled={loading || googleLoading}
               className="w-full bg-neon-cyan text-background hover:bg-neon-green font-orbitron font-bold py-6 text-lg neon-glow-cyan transition-all duration-300 hover:shadow-neon-cyan"
             >
               {loading ? (
@@ -144,7 +202,7 @@ export function Login() {
           {/* Google Sign In */}
           <Button
             onClick={handleGoogleLogin}
-            disabled={googleLoading}
+            disabled={googleLoading || loading}
             className="w-full bg-white text-black hover:bg-gray-100 font-orbitron font-bold py-6 text-lg transition-all duration-300 mb-4"
           >
             {googleLoading ? (
@@ -195,6 +253,7 @@ export function Signup() {
   const [displayName, setDisplayName] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleEmailSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -214,17 +273,29 @@ export function Signup() {
     }
 
     setLoading(true);
+    setError(null);
     try {
       await signUp(email, password, displayName);
       toast.success('Account created successfully!');
       setLocation('/');
     } catch (error: any) {
       console.error('Signup error:', error);
-      const errorMessage = error.code === 'auth/email-already-in-use'
-        ? 'Email already in use. Please log in or use a different email.'
-        : error.code === 'auth/weak-password'
-        ? 'Password is too weak. Please use a stronger password.'
-        : error.message || 'Signup failed. Please try again.';
+      
+      let errorMessage = 'Signup failed. Please try again.';
+      
+      if (error?.code === 'auth/email-already-in-use') {
+        errorMessage = 'Email already in use. Please log in or use a different email.';
+      } else if (error?.code === 'auth/weak-password') {
+        errorMessage = 'Password is too weak. Please use a stronger password.';
+      } else if (error?.code === 'auth/invalid-email') {
+        errorMessage = 'Invalid email address.';
+      } else if (error?.code === 'auth/network-request-failed') {
+        errorMessage = 'Network error. Please check your connection and try again.';
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
+      setError(errorMessage);
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -233,13 +304,28 @@ export function Signup() {
 
   const handleGoogleSignup = async () => {
     setGoogleLoading(true);
+    setError(null);
     try {
       await signInWithGoogle();
       toast.success('Account created successfully!');
       setLocation('/');
     } catch (error: any) {
       console.error('Google signup error:', error);
-      toast.error('Google signup failed. Please try again.');
+      
+      let errorMessage = 'Google signup failed. Please try again.';
+      
+      if (error?.code === 'auth/popup-blocked') {
+        errorMessage = 'Popup was blocked. Please allow popups and try again.';
+      } else if (error?.code === 'auth/popup-closed-by-user') {
+        errorMessage = 'Sign-up was cancelled.';
+      } else if (error?.code === 'auth/network-request-failed') {
+        errorMessage = 'Network error. Please check your connection and try again.';
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setGoogleLoading(false);
     }
@@ -271,6 +357,16 @@ export function Signup() {
             </p>
           </div>
 
+          {/* Error Alert */}
+          {error && (
+            <div className="mb-6 p-4 border border-red-500/50 bg-red-500/10 rounded-sm flex gap-3">
+              <AlertCircle size={20} className="text-red-500 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="font-space-mono text-sm text-red-500">{error}</p>
+              </div>
+            </div>
+          )}
+
           {/* Email/Password Form */}
           <form onSubmit={handleEmailSignup} className="space-y-4 mb-6">
             <div>
@@ -283,7 +379,7 @@ export function Signup() {
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                   className="pl-10 bg-background border-neon-magenta/30 text-foreground placeholder:text-muted-foreground"
-                  disabled={loading}
+                  disabled={loading || googleLoading}
                 />
               </div>
             </div>
@@ -298,7 +394,7 @@ export function Signup() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10 bg-background border-neon-magenta/30 text-foreground placeholder:text-muted-foreground"
-                  disabled={loading}
+                  disabled={loading || googleLoading}
                 />
               </div>
             </div>
@@ -313,7 +409,7 @@ export function Signup() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="pl-10 bg-background border-neon-magenta/30 text-foreground placeholder:text-muted-foreground"
-                  disabled={loading}
+                  disabled={loading || googleLoading}
                 />
               </div>
             </div>
@@ -328,14 +424,14 @@ export function Signup() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="pl-10 bg-background border-neon-magenta/30 text-foreground placeholder:text-muted-foreground"
-                  disabled={loading}
+                  disabled={loading || googleLoading}
                 />
               </div>
             </div>
 
             <Button
               type="submit"
-              disabled={loading}
+              disabled={loading || googleLoading}
               className="w-full bg-neon-magenta text-background hover:bg-neon-cyan font-orbitron font-bold py-6 text-lg neon-glow-magenta transition-all duration-300 hover:shadow-neon-magenta"
             >
               {loading ? (
@@ -363,10 +459,10 @@ export function Signup() {
             </div>
           </div>
 
-          {/* Google Sign Up */}
+          {/* Google Sign In */}
           <Button
             onClick={handleGoogleSignup}
-            disabled={googleLoading}
+            disabled={googleLoading || loading}
             className="w-full bg-white text-black hover:bg-gray-100 font-orbitron font-bold py-6 text-lg transition-all duration-300 mb-4"
           >
             {googleLoading ? (
@@ -394,29 +490,14 @@ export function Signup() {
             onClick={() => setLocation('/auth/login')}
             disabled={loading || googleLoading}
           >
-            EXISTING USER? LOGIN
+            ALREADY HAVE AN ACCOUNT?
           </Button>
 
-          {/* Benefits */}
-          <div className="mt-8 space-y-3">
-            <div className="flex gap-3 p-3 border border-neon-green/30 rounded-sm bg-background/50">
-              <span className="text-neon-green flex-shrink-0">✓</span>
-              <p className="font-space-mono text-xs text-muted-foreground">
-                Access personalized reading history
-              </p>
-            </div>
-            <div className="flex gap-3 p-3 border border-neon-green/30 rounded-sm bg-background/50">
-              <span className="text-neon-green flex-shrink-0">✓</span>
-              <p className="font-space-mono text-xs text-muted-foreground">
-                Receive email notifications for new posts
-              </p>
-            </div>
-            <div className="flex gap-3 p-3 border border-neon-green/30 rounded-sm bg-background/50">
-              <span className="text-neon-green flex-shrink-0">✓</span>
-              <p className="font-space-mono text-xs text-muted-foreground">
-                Comment and engage with the community
-              </p>
-            </div>
+          {/* Info */}
+          <div className="mt-8 p-4 border border-neon-green/30 rounded-sm bg-background/50">
+            <p className="font-space-mono text-xs text-muted-foreground">
+              [ SYSTEM INFO ] Secure Firebase authentication. Your data is encrypted and protected.
+            </p>
           </div>
         </Card>
       </div>
