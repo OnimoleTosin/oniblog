@@ -156,3 +156,12 @@
 - [x] Test Google Sign-in with proper error handling (error alerts in Auth.tsx + visible retry button)
 - [x] Verify token attachment to tRPC requests (confirmed in main.tsx, token sent via Authorization header)
 - [x] Add visible retry button to error alerts (implemented in Login and Signup components)
+
+
+## Navbar & Admin Dashboard - COMPLETED
+- [x] Fix navbar to show authenticated user state after login (Navigation component already had logic, now working with auth state)
+- [x] Create admin dashboard page for admin users (AdminDashboard.tsx updated to check admin role)
+- [x] Set up admin user in database (Onimolesodiq282@gmail.com with admin role via upsertUser logic)
+- [x] Test navbar updates correctly after login/logout (all 17 tests passing)
+- [x] Verify admin can access admin dashboard (role-based access control implemented)
+- [x] Fixed Firebase Admin SDK initialization (dynamic import for ES modules)

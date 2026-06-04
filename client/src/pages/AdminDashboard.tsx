@@ -17,9 +17,10 @@ export default function AdminDashboard() {
   const { data: posts } = trpc.posts.getPublished.useQuery({ limit: 100 });
   const { data: categories } = trpc.categories.getAll.useQuery();
 
-  const { data: isOwner } = trpc.users.isOwner.useQuery();
+  // Check if user is admin
+  const isAdmin = user?.role === 'admin';
 
-  if (!isAuthenticated || !isOwner) {
+  if (!isAuthenticated || !isAdmin) {
     return (
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
         <div className="text-center">

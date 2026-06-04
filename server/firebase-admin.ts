@@ -1,41 +1,91 @@
-import * as admin from 'firebase-admin';
+import type * as AdminType from 'firebase-admin';
 
 // Initialize Firebase Admin SDK
 // Note: This uses the default credentials from the environment
 // For production, ensure GOOGLE_APPLICATION_CREDENTIALS env var points to your service account JSON
 
-let adminApp: admin.app.App | null = null;
+let adminApp: any = null;
+let adminAuth: any = null;
+let initializationError: Error | null = null;
+let adminModule: any = null;
 
-export function initializeFirebaseAdmin() {
-  if (adminApp) {
-    return adminApp;
+async function loadFirebaseAdmin() {
+  if (adminModule) {
+    return adminModule;
   }
 
   try {
-    adminApp = admin.initializeApp({
-      projectId: 'soulcircleauth',
-    });
-    console.log('[Firebase Admin] Initialized successfully');
-    return adminApp;
+    // Dynamically import firebase-admin for ES module compatibility
+    const imported = await import('firebase-admin');
+    adminModule = imported.default || imported;
+    return adminModule;
   } catch (error) {
-    console.error('[Firebase Admin] Failed to initialize:', error);
+    console.error('[Firebase Admin] Failed to load module:', error);
     throw error;
   }
 }
 
-export function getFirebaseAuth() {
-  if (!adminApp) {
-    initializeFirebaseAdmin();
+export async function initializeFirebaseAdmin() {
+  if (adminApp) {
+    return adminApp;
   }
-  return admin.auth();
+
+  if (initializationError) {
+    throw initializationError;
+  }
+
+  try {
+    const admin = await loadFirebaseAdmin();
+
+    // Check if admin SDK is properly imported
+    if (typeof admin.initializeApp !== 'function') {
+      throw new Error('Firebase Admin SDK not properly loaded');
+    }
+
+    // Try to initialize with projectId only (uses default credentials)
+    adminApp = admin.initializeApp({
+      projectId: 'soulcircleauth',
+    });
+    console.log('[Firebase Admin] Initialized successfully with projectId');
+    return adminApp;
+  } catch (error: any) {
+    console.error('[Firebase Admin] Failed to initialize:', error);
+    initializationError = error;
+    
+    // Continue without Firebase Admin - public procedures will still work
+    console.warn('[Firebase Admin] Using fallback mode - token verification will be limited');
+    return null;
+  }
+}
+
+export async function getFirebaseAuth() {
+  try {
+    if (!adminAuth) {
+      if (!adminApp) {
+        await initializeFirebaseAdmin();
+      }
+      
+      if (!adminApp) {
+        throw new Error('Firebase Admin not initialized');
+      }
+
+      const admin = await loadFirebaseAdmin();
+      adminAuth = admin.auth();
+    }
+    
+    return adminAuth;
+  } catch (error) {
+    console.error('[Firebase Admin] Failed to get auth:', error);
+    throw error;
+  }
 }
 
 /**
  * Verify Firebase ID token
  */
-export async function verifyIdToken(token: string): Promise<admin.auth.DecodedIdToken> {
+export async function verifyIdToken(token: string): Promise<any> {
   try {
-    const auth = getFirebaseAuth();
+    const auth = await getFirebaseAuth();
     const decodedToken = await auth.verifyIdToken(token);
     return decodedToken;
   } catch (error) {
@@ -49,7 +99,7 @@ export async function verifyIdToken(token: string): Promise<admin.auth.DecodedId
  */
 export async function syncFirebaseUser(uid: string, email?: string, displayName?: string) {
   try {
-    const auth = getFirebaseAuth();
+    const auth = await getFirebaseAuth();
     const userRecord = await auth.getUser(uid);
     
     return {

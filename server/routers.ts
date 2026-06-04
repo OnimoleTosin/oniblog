@@ -17,8 +17,13 @@ const ownerProcedure = protectedProcedure.use(({ ctx, next }) => {
   return next({ ctx });
 });
 
-// Admin-only procedure (kept for backward compatibility, but enforces owner)
-const adminProcedure = ownerProcedure;
+// Admin-only procedure (checks for admin role or owner)
+const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
+  if (!ctx.user || (ctx.user.role !== 'admin' && ctx.user.openId !== ENV.ownerOpenId)) {
+    throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin access required' });
+  }
+  return next({ ctx });
+});
 
 export const appRouter = router({
   system: systemRouter,

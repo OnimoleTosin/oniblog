@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server';
-import { verifyIdToken } from '../firebase-admin';
+import { verifyIdToken, initializeFirebaseAdmin } from '../firebase-admin';
 import type { TrpcContext } from './context';
 
 /**
@@ -20,6 +20,9 @@ export function extractFirebaseToken(req: any): string | null {
  */
 export async function verifyFirebaseAuth(token: string): Promise<any> {
   try {
+    // Ensure Firebase Admin is initialized
+    await initializeFirebaseAdmin();
+    
     const decodedToken = await verifyIdToken(token);
     return {
       uid: decodedToken.uid,
