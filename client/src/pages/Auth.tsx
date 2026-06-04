@@ -37,6 +37,8 @@ export function Login() {
         errorMessage = 'User not found. Please sign up first.';
       } else if (error?.code === 'auth/wrong-password') {
         errorMessage = 'Incorrect password.';
+      } else if (error?.code === 'auth/invalid-credential') {
+        errorMessage = 'Invalid email or password. Please check your credentials and try again.';
       } else if (error?.code === 'auth/invalid-email') {
         errorMessage = 'Invalid email address.';
       } else if (error?.code === 'auth/too-many-requests') {
@@ -287,6 +289,8 @@ export function Signup() {
         errorMessage = 'Email already in use. Please log in or use a different email.';
       } else if (error?.code === 'auth/weak-password') {
         errorMessage = 'Password is too weak. Please use a stronger password.';
+      } else if (error?.code === 'auth/invalid-credential') {
+        errorMessage = 'Invalid credentials provided. Please check your email and password.';
       } else if (error?.code === 'auth/invalid-email') {
         errorMessage = 'Invalid email address.';
       } else if (error?.code === 'auth/network-request-failed') {
