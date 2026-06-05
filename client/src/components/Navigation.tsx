@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { Menu, X, LogOut, User, Settings } from 'lucide-react';
+import { Menu, X, LogOut, User } from 'lucide-react';
 
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
@@ -55,14 +55,6 @@ export default function Navigation() {
         <div className="hidden md:flex items-center gap-4">
           {isAuthenticated ? (
             <div className="flex items-center gap-4">
-              {user?.role === 'admin' && (
-                <Link href="/admin">
-                  <Button variant="outline" size="sm" className="border-neon-magenta text-neon-magenta hover:bg-neon-magenta hover:text-background font-space-mono">
-                    <Settings size={16} className="mr-2" />
-                    ADMIN
-                  </Button>
-                </Link>
-              )}
               <Link href="/profile">
                 <Button variant="outline" size="sm" className="border-neon-cyan text-neon-cyan hover:bg-neon-cyan hover:text-background font-space-mono">
                   <User size={16} className="mr-2" />
@@ -129,14 +121,6 @@ export default function Navigation() {
             <div className="border-t border-neon-cyan/20 pt-4 flex flex-col gap-3">
               {isAuthenticated ? (
                 <>
-                  {user?.role === 'admin' && (
-                    <Link href="/admin">
-                      <Button variant="outline" size="sm" className="w-full border-neon-magenta text-neon-magenta hover:bg-neon-magenta hover:text-background font-space-mono">
-                        <Settings size={16} className="mr-2" />
-                        ADMIN
-                      </Button>
-                    </Link>
-                  )}
                   <Link href="/profile">
                     <Button variant="outline" size="sm" className="w-full border-neon-cyan text-neon-cyan hover:bg-neon-cyan hover:text-background font-space-mono">
                       <User size={16} className="mr-2" />

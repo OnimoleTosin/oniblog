@@ -26,6 +26,8 @@ export function Login() {
     setError(null);
     try {
       await signIn(email, password);
+      // Wait a moment for Firebase auth state to update
+      await new Promise(resolve => setTimeout(resolve, 500));
       toast.success('Login successful!');
       setLocation('/');
     } catch (error: any) {
@@ -61,6 +63,8 @@ export function Login() {
     setError(null);
     try {
       await signInWithGoogle();
+      // Wait a moment for Firebase auth state to update
+      await new Promise(resolve => setTimeout(resolve, 500));
       toast.success('Login successful!');
       setLocation('/');
     } catch (error: any) {
@@ -278,6 +282,8 @@ export function Signup() {
     setError(null);
     try {
       await signUp(email, password, displayName);
+      // Wait a moment for Firebase auth state to update
+      await new Promise(resolve => setTimeout(resolve, 500));
       toast.success('Account created successfully!');
       setLocation('/');
     } catch (error: any) {
@@ -311,6 +317,8 @@ export function Signup() {
     setError(null);
     try {
       await signInWithGoogle();
+      // Wait a moment for Firebase auth state to update
+      await new Promise(resolve => setTimeout(resolve, 500));
       toast.success('Account created successfully!');
       setLocation('/');
     } catch (error: any) {
